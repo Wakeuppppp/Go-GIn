@@ -11,10 +11,19 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"go-gin/Controller"
+	"go-gin/controller"
+	"go-gin/middleware"
 )
 
 func CollectRoute(r *gin.Engine) *gin.Engine {
-	r.POST("/api/auth/register", Controller.Register)
+	r.POST("/api/auth/register", controller.Register)
+	r.POST("api/auth/login", controller.Login)
+	r.GET("api/auth/info", middleware.AuthMiddleware(), controller.Info)
+	// r.GET("api/auth/info", controller.Info)
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "hello gin",
+		})
+	})
 	return r
 }
