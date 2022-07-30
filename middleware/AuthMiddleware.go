@@ -3,7 +3,7 @@
  * Author: _谷安
  * @Time : 2022/7/26 22:13
  * @Project_Name : go-gin
- * @File : AuthMidlleware.go
+ * @File : AuthMiddleware.go
  * @Software :GoLand
  */
 

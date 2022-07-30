@@ -10,6 +10,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"go-gin/common"
 	"go-gin/dto"
@@ -25,9 +26,16 @@ import (
 func Login(ctx *gin.Context) {
 	DB := common.GetDB()
 
+	// 使用gin框架提供的Bind函数
+	var requestUser = model.User{}
+	err := ctx.Bind(&requestUser)
+	if err != nil {
+		return
+	}
+
 	// 获取参数
-	telephone := ctx.PostForm("telephone")
-	password := ctx.PostForm("password")
+	telephone := requestUser.Telephone
+	password := requestUser.Password
 
 	// 数据验证
 	var user model.User
@@ -58,12 +66,34 @@ func Login(ctx *gin.Context) {
 
 func Register(ctx *gin.Context) {
 	DB := common.GetDB()
+	// 使用map获取请求参数
+	// var requestUser = make(map[string]string)
+	// json.NewDecoder(ctx.Request.Body).Decode(&requestUser)
+	// fmt.Println("map: ", requestUser)
+
+	// 使用结构体来获取参数
+	// var requestUser = model.User{}
+	// json.NewDecoder(ctx.Request.Body).Decode(&requestUser)
+	// fmt.Println("结构体: ", requestUser)
+
+	// 使用gin框架提供的Bind函数
+	var requestUser = model.User{}
+	err := ctx.Bind(&requestUser)
+	if err != nil {
+		return
+	}
+
 	// 获取参数
-	name := ctx.PostForm("name")
-	telephone := ctx.PostForm("telephone")
-	password := ctx.PostForm("password")
+	name := requestUser.Name
+	telephone := requestUser.Telephone
+	password := requestUser.Password
+
+	// name := "requestUser.Name"
+	// telephone := "requestUser.Telephone"
+	// password := "requestUser.Password"
 
 	// 数据验证
+	fmt.Println("Gin: ", requestUser.Name, requestUser.Telephone, requestUser.Password)
 	if !util.CheckPhone(telephone) {
 		response.Response(ctx, http.StatusUnprocessableEntity, 422, nil, "手机号格式错误")
 		// ctx.JSON(http.StatusUnprocessableEntity, gin.H{"code": 422, "msg": "手机号格式错误"})
@@ -99,11 +129,25 @@ func Register(ctx *gin.Context) {
 		Name:      name,
 		Telephone: telephone,
 		Password:  string(hashedPassword),
+		Note:      password,
 	}
 	DB.Create(&newUser)
+	fmt.Println("创建用户成功: ", newUser.Name, newUser.Telephone)
+
+	// 发送token
+	token, err := common.ReleaseToken(newUser)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"code": 500, "msg": "系统异常"})
+		log.Println("token generate error: ", err)
+		return
+	}
 
 	// 返回结果
-	response.Success(ctx, nil, "注册成功")
+	// ctx.JSON(200, gin.H{"code": 200, "data": gin.H{"token": token}, "msg": "登陆成功"})
+	response.Success(ctx, gin.H{"token": token}, "注册成功")
+
+	// 返回结果
+	// response.Success(ctx, nil, "注册成功")
 	// ctx.JSON(http.StatusOK, gin.H{"code": 200, "msg": "注册成功"})
 
 }
